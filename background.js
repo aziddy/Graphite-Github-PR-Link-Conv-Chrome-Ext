@@ -63,7 +63,14 @@ async function scrollToTop(tab) {
   try {
     await chrome.scripting.executeScript({
       target: { tabId: tab.id },
-      func: () => window.scrollTo({ top: 0, behavior: "smooth" }),
+      func: () => {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+        document.querySelectorAll("*").forEach((el) => {
+          if (el.scrollTop > 0) {
+            el.scrollTo({ top: 0, behavior: "smooth" });
+          }
+        });
+      },
     });
   } catch (err) {
     console.error("Scroll-to-top failed:", err);
