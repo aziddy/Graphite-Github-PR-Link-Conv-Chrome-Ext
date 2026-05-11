@@ -1,0 +1,8 @@
+INIT-PROMPT.md
+example.md
+
+.DS_Store
+.vscode/
+.idea/
+*.log
+node_modules/

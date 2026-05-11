@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Graphite ⇄ GitHub PR Converter — Options</title>
+  <style>
+    html {
+      background: #f6f7f8;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-size: 14px;
+      color: #222;
+      max-width: 480px;
+      margin: 48px auto;
+      padding: 24px 28px;
+      background: #fff;
+      border: 1px solid #e3e5e8;
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    }
+    h1 {
+      font-size: 18px;
+      margin: 0 0 16px;
+    }
+    h2 {
+      font-size: 14px;
+      margin: 0 0 8px;
+      font-weight: 600;
+    }
+    section + section {
+      margin-top: 24px;
+      padding-top: 20px;
+      border-top: 1px solid #eef0f2;
+    }
+    label {
+      display: block;
+      margin-bottom: 6px;
+      font-weight: 500;
+    }
+    select {
+      width: 100%;
+      padding: 6px 8px;
+      font-size: 14px;
+    }
+    kbd {
+      display: inline-block;
+      padding: 2px 6px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-size: 13px;
+      background: #f1f3f5;
+      border: 1px solid #d6d9dd;
+      border-bottom-width: 2px;
+      border-radius: 4px;
+      color: #222;
+    }
+    .row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .current-shortcut {
+      margin: 0 0 12px;
+    }
+    .button-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    button {
+      font: inherit;
+      padding: 6px 12px;
+      background: #fff;
+      border: 1px solid #c8ccd1;
+      border-radius: 4px;
+      cursor: pointer;
+      color: #222;
+    }
+    button:hover {
+      background: #f6f7f8;
+    }
+    button.primary {
+      background: #1a73e8;
+      border-color: #1a73e8;
+      color: #fff;
+    }
+    button.primary:hover {
+      background: #1666cc;
+    }
+    button.danger {
+      background: #c0392b;
+      border-color: #c0392b;
+      color: #fff;
+    }
+    button.danger:hover {
+      background: #a83224;
+    }
+    .confirm {
+      margin-top: 12px;
+      padding: 12px;
+      background: #fff8e1;
+      border: 1px solid #f0d979;
+      border-radius: 4px;
+      font-size: 13px;
+      line-height: 1.45;
+    }
+    .confirm p {
+      margin: 0 0 10px;
+    }
+    .saved {
+      margin-top: 8px;
+      font-size: 12px;
+      color: #27ae60;
+      opacity: 0;
+      transition: opacity 150ms ease;
+    }
+    .saved.visible {
+      opacity: 1;
+    }
+    .muted {
+      color: #666;
+      font-size: 12px;
+    }
+  </style>
+</head>
+<body>
+  <h1>PR Link Converter</h1>
+
+  <section>
+    <label for="openBehavior">When converting a link:</label>
+    <select id="openBehavior">
+      <option value="replace">Replace current tab</option>
+      <option value="newTab">Open in new tab</option>
+      <option value="clipboard">Copy to clipboard</option>
+    </select>
+    <div id="saved" class="saved">Saved</div>
+  </section>
+
+  <section>
+    <h2>Keyboard shortcut</h2>
+    <p class="current-shortcut">
+      Convert active tab: <kbd id="currentShortcut">…</kbd>
+      <span id="defaultBadge" class="muted" hidden>(default)</span>
+    </p>
+    <div class="button-row">
+      <button id="changeShortcut" type="button" class="primary">Change shortcut…</button>
+      <button id="revertShortcut" type="button">Revert to default</button>
+    </div>
+
+    <div id="confirmRevert" class="confirm" hidden>
+      <p>
+        <strong>Are you sure?</strong> Chrome doesn't let extensions reset their own shortcuts —
+        clicking <em>Yes</em> opens Chrome's shortcut editor in a new tab. There, find
+        <em>PR Link Converter</em>, click the pencil icon next to the current shortcut, and press
+        <kbd>⌘⇧L</kbd> (macOS) or <kbd>Ctrl+Shift+L</kbd> (Windows/Linux).
+      </p>
+      <div class="button-row">
+        <button id="confirmRevertYes" type="button" class="danger">Yes, open editor</button>
+        <button id="confirmRevertNo" type="button">Cancel</button>
+      </div>
+    </div>
+  </section>
+
+  <script src="options.js"></script>
+</body>
+</html>
