@@ -9,6 +9,10 @@ function convert(url) {
   return null;
 }
 
+function isPrPage(url) {
+  return GRAPHITE_RE.test(url) || GITHUB_RE.test(url);
+}
+
 function flashBadge(tabId, text, color) {
   chrome.action.setBadgeBackgroundColor({ color, tabId });
   chrome.action.setBadgeText({ text, tabId });
@@ -50,10 +54,30 @@ async function convertActiveTab(tab) {
   }
 }
 
+async function scrollToTop(tab) {
+  if (!tab?.id) return;
+  if (!isPrPage(tab.url ?? "")) {
+    flashBadge(tab.id, "✗", "#c0392b");
+    return;
+  }
+  try {
+    await chrome.scripting.executeScript({
+      target: { tabId: tab.id },
+      func: () => window.scrollTo({ top: 0, behavior: "smooth" }),
+    });
+  } catch (err) {
+    console.error("Scroll-to-top failed:", err);
+    flashBadge(tab.id, "✗", "#c0392b");
+  }
+}
+
 chrome.commands.onCommand.addListener(async (command) => {
-  if (command !== "convert-pr-link") return;
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-  await convertActiveTab(tab);
+  if (command === "convert-pr-link") {
+    await convertActiveTab(tab);
+  } else if (command === "scroll-to-top") {
+    await scrollToTop(tab);
+  }
 });
 
 chrome.action.onClicked.addListener(() => {

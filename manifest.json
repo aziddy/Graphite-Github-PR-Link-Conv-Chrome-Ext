@@ -31,6 +31,13 @@
         "mac": "Command+Shift+L"
       },
       "description": "Convert the current PR page between Graphite and GitHub"
+    },
+    "scroll-to-top": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+U",
+        "mac": "Command+Shift+U"
+      },
+      "description": "Scroll to the top of the current PR page"
     }
   },
   "options_ui": {

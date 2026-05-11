@@ -1,11 +1,12 @@
-const DEFAULT_SHORTCUT_MAC = "⌘⇧L";
-const DEFAULT_SHORTCUT_OTHER = "Ctrl+Shift+L";
 const SHORTCUTS_URL = "chrome://extensions/shortcuts";
+
+const COMMANDS = [
+  { name: "convert-pr-link", defaultMac: "⌘⇧L", defaultOther: "Ctrl+Shift+L" },
+  { name: "scroll-to-top", defaultMac: "⌘⇧U", defaultOther: "Ctrl+Shift+U" },
+];
 
 const select = document.getElementById("openBehavior");
 const saved = document.getElementById("saved");
-const currentShortcut = document.getElementById("currentShortcut");
-const defaultBadge = document.getElementById("defaultBadge");
 const changeBtn = document.getElementById("changeShortcut");
 const revertBtn = document.getElementById("revertShortcut");
 const confirmRevert = document.getElementById("confirmRevert");
@@ -13,7 +14,6 @@ const confirmYes = document.getElementById("confirmRevertYes");
 const confirmNo = document.getElementById("confirmRevertNo");
 
 const isMac = /mac/i.test(navigator.platform);
-const defaultShortcut = isMac ? DEFAULT_SHORTCUT_MAC : DEFAULT_SHORTCUT_OTHER;
 
 function shortcutsMatch(a, b) {
   const normalize = (s) =>
@@ -27,19 +27,28 @@ function shortcutsMatch(a, b) {
   return normalize(a) === normalize(b);
 }
 
-async function refreshShortcut() {
-  const commands = await chrome.commands.getAll();
-  const cmd = commands.find((c) => c.name === "convert-pr-link");
-  const binding = cmd?.shortcut?.trim();
+async function refreshShortcuts() {
+  const all = await chrome.commands.getAll();
+  for (const { name, defaultMac, defaultOther } of COMMANDS) {
+    const kbd = document.querySelector(`kbd[data-cmd="${name}"]`);
+    const badge = document.querySelector(`.default-badge[data-cmd="${name}"]`);
+    if (!kbd || !badge) continue;
 
-  if (binding) {
-    currentShortcut.textContent = binding;
-    defaultBadge.hidden = !shortcutsMatch(binding, defaultShortcut) &&
-                         !shortcutsMatch(binding, "Ctrl+Shift+L") &&
-                         !shortcutsMatch(binding, "Command+Shift+L");
-  } else {
-    currentShortcut.textContent = "Not set";
-    defaultBadge.hidden = true;
+    const cmd = all.find((c) => c.name === name);
+    const binding = cmd?.shortcut?.trim();
+
+    if (binding) {
+      kbd.textContent = binding;
+      const expected = isMac ? defaultMac : defaultOther;
+      const isDefault =
+        shortcutsMatch(binding, expected) ||
+        shortcutsMatch(binding, defaultMac) ||
+        shortcutsMatch(binding, defaultOther);
+      badge.hidden = !isDefault;
+    } else {
+      kbd.textContent = "Not set";
+      badge.hidden = true;
+    }
   }
 }
 
@@ -70,7 +79,7 @@ confirmYes.addEventListener("click", () => {
   chrome.tabs.create({ url: SHORTCUTS_URL });
 });
 
-refreshShortcut();
+refreshShortcuts();
 document.addEventListener("visibilitychange", () => {
-  if (!document.hidden) refreshShortcut();
+  if (!document.hidden) refreshShortcuts();
 });

@@ -18,10 +18,11 @@ Extra sub-paths (e.g. `/files`, `/commits`), query strings, and hash fragments a
 
 ## Usage
 
-- **Convert (keyboard shortcut):** `⌘⇧L` on macOS, `Ctrl+Shift+L` on Windows/Linux — converts the active tab.
+- **Convert PR link:** `⌘⇧L` on macOS, `Ctrl+Shift+L` on Windows/Linux — converts the active tab.
+- **Scroll to top of PR:** `⌘⇧U` on macOS, `Ctrl+Shift+U` on Windows/Linux — smooth-scrolls to the top of the page (only acts on Graphite or GitHub PR pages).
 - **Toolbar icon:** opens the settings page in a new tab. From there you can:
   - Choose what happens on convert: replace current tab (default), open in new tab, or copy to clipboard.
-  - See the current shortcut binding, change it, or revert to default — all of these deep-link to Chrome's built-in shortcut editor (`chrome://extensions/shortcuts`), the only place Chrome lets users rebind extension shortcuts.
+  - See the current shortcut bindings, change them, or revert to defaults — all of these deep-link to Chrome's built-in shortcut editor (`chrome://extensions/shortcuts`), the only place Chrome lets users rebind extension shortcuts.
 
 If the current tab isn't a recognized PR URL, the toolbar badge briefly shows `✗` and nothing else happens.
 
