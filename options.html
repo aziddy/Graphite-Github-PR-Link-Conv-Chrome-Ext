@@ -60,6 +60,21 @@
       gap: 8px;
       flex-wrap: wrap;
     }
+    .checkbox-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 6px;
+      font-weight: 500;
+    }
+    .checkbox-row input {
+      width: 16px;
+      height: 16px;
+      margin: 0;
+    }
+    .checkbox-row + .muted {
+      margin-top: 4px;
+    }
     .shortcut-list {
       list-style: none;
       padding: 0;
@@ -143,6 +158,7 @@
     .muted {
       color: #666;
       font-size: 12px;
+      line-height: 1.45;
     }
   </style>
 </head>
@@ -157,6 +173,20 @@
       <option value="clipboard">Copy to clipboard</option>
     </select>
     <div id="saved" class="saved">Saved</div>
+  </section>
+
+  <section>
+    <h2>Graphite PR pages</h2>
+    <label class="checkbox-row">
+      <input type="checkbox" id="stickyBranchBar" />
+      <span>Show a sticky branch-name bar at the top</span>
+    </label>
+    <p class="muted">
+      Pins the PR's branch name to the top of the page once you scroll past it,
+      so you never lose track of which branch you're viewing. Click the bar to
+      jump back to the top.
+    </p>
+    <div id="savedSticky" class="saved">Saved</div>
   </section>
 
   <section>

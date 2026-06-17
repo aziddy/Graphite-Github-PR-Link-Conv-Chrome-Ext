@@ -17,6 +17,14 @@
   "background": {
     "service_worker": "background.js"
   },
+  "content_scripts": [
+    {
+      "matches": ["https://app.graphite.com/*"],
+      "js": ["content.js"],
+      "css": ["content.css"],
+      "run_at": "document_idle"
+    }
+  ],
   "action": {
     "default_title": "PR Link Converter — open settings",
     "default_icon": {

@@ -1,0 +1,121 @@
+/* Sticky branch-name bar for Graphite PR pages. */
+
+/* A compact floating bar pinned to the top-left of the content area, sitting
+   just below Graphite's own sticky header so it never covers the native PR
+   title or the Review/Merge/Agent action buttons. */
+#ghpr-sticky-branch-bar {
+  position: fixed;
+  top: 44px; /* clears Graphite's native sticky header */
+  left: 52px; /* clears Graphite's left icon rail */
+  z-index: 2147483646; /* below browser chrome, above app UI */
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  box-sizing: border-box;
+  max-width: min(680px, calc(100vw - 120px));
+  height: 32px;
+  padding: 0 6px 0 12px;
+  background: rgba(20, 22, 28, 0.94);
+  backdrop-filter: saturate(140%) blur(6px);
+  -webkit-backdrop-filter: saturate(140%) blur(6px);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 8px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 13px;
+  color: #e8eaed;
+
+  /* Hidden by default; fades/slides in when the real branch scrolls away. */
+  transform: translateY(-6px);
+  opacity: 0;
+  pointer-events: none;
+  transition: transform 140ms ease, opacity 140ms ease;
+}
+
+#ghpr-sticky-branch-bar[data-visible="true"] {
+  transform: translateY(0);
+  opacity: 1;
+  pointer-events: auto;
+}
+
+#ghpr-sticky-branch-bar .ghpr-sbb-main {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  padding: 0;
+  background: none;
+  border: 0;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+#ghpr-sticky-branch-bar .ghpr-sbb-num {
+  flex: none;
+  color: #9aa0a6;
+  font-variant-numeric: tabular-nums;
+}
+#ghpr-sticky-branch-bar .ghpr-sbb-num:empty {
+  display: none;
+}
+
+#ghpr-sticky-branch-bar .ghpr-sbb-icon {
+  flex: none;
+  color: #8ab4f8;
+  font-size: 14px;
+  line-height: 1;
+}
+
+#ghpr-sticky-branch-bar .ghpr-sbb-name {
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #f1f3f4;
+}
+
+#ghpr-sticky-branch-bar .ghpr-sbb-arrow {
+  flex: none;
+  color: #9aa0a6;
+}
+#ghpr-sticky-branch-bar .ghpr-sbb-arrow:empty {
+  display: none;
+}
+
+#ghpr-sticky-branch-bar .ghpr-sbb-target {
+  flex: none;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 12.5px;
+  color: #bdc1c6;
+}
+#ghpr-sticky-branch-bar .ghpr-sbb-target:empty {
+  display: none;
+}
+
+#ghpr-sticky-branch-bar .ghpr-sbb-copy {
+  flex: none;
+  padding: 3px 10px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 5px;
+  color: #e8eaed;
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 120ms ease;
+}
+#ghpr-sticky-branch-bar .ghpr-sbb-copy:hover {
+  background: rgba(255, 255, 255, 0.16);
+}
+#ghpr-sticky-branch-bar .ghpr-sbb-copy.ghpr-sbb-copied {
+  color: #81c995;
+  border-color: rgba(129, 201, 149, 0.5);
+}

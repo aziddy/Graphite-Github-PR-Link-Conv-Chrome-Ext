@@ -7,6 +7,8 @@ const COMMANDS = [
 
 const select = document.getElementById("openBehavior");
 const saved = document.getElementById("saved");
+const stickyBar = document.getElementById("stickyBranchBar");
+const savedSticky = document.getElementById("savedSticky");
 const changeBtn = document.getElementById("changeShortcut");
 const revertBtn = document.getElementById("revertShortcut");
 const confirmRevert = document.getElementById("confirmRevert");
@@ -60,6 +62,16 @@ select.addEventListener("change", async () => {
   await chrome.storage.sync.set({ openBehavior: select.value });
   saved.classList.add("visible");
   setTimeout(() => saved.classList.remove("visible"), 1000);
+});
+
+chrome.storage.sync.get("stickyBranchBar").then(({ stickyBranchBar = true }) => {
+  stickyBar.checked = stickyBranchBar;
+});
+
+stickyBar.addEventListener("change", async () => {
+  await chrome.storage.sync.set({ stickyBranchBar: stickyBar.checked });
+  savedSticky.classList.add("visible");
+  setTimeout(() => savedSticky.classList.remove("visible"), 1000);
 });
 
 changeBtn.addEventListener("click", () => {
