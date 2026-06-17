@@ -19,7 +19,6 @@
 
   let enabled = true; // sticky bar; default on, overwritten by stored setting
   let bar = null;
-  let branchEl = null; // element holding the source branch name
   let scheduled = false;
 
   let activityEnabled = true; // auto-scroll Activity pane; default on
@@ -29,29 +28,27 @@
 
   // ---- DOM helpers ---------------------------------------------------------
 
-  // Source branch: a button whose CSS-module class contains "branch-name".
-  // (The target branch renders as a <span> with the same substring.)
+  // The PR's OWN (source) branch carries the CSS-module class
+  // "BranchMetadata_sourceBranchMenu". The base/target branch is a separate
+  // "PrBaseBranchSelect_branchName" element — on a stacked PR that base is the
+  // branch one step lower in the stack, and it can render as a <button> too, so
+  // a generic "branch-name" match would sometimes grab it instead. Target the
+  // source explicitly, and never the base select. Queried fresh each call so it
+  // stays correct across in-app navigation between stacked PRs.
   function findBranchEl() {
-    if (branchEl && branchEl.isConnected) return branchEl;
-    branchEl =
-      document.querySelector('button[class*="branch-name"]') ||
-      document.querySelector('button[aria-haspopup="menu"][title]');
-    return branchEl;
+    return (
+      document.querySelector('[class*="sourceBranchMenu"]') ||
+      document.querySelector('[class*="BranchMetadata_sourceBranch"]') ||
+      [...document.querySelectorAll('[class*="branch-name"]')].find(
+        (el) => !/PrBaseBranchSelect/.test(el.className.toString())
+      ) ||
+      null
+    );
   }
 
   function branchName(el) {
     if (!el) return "";
     return (el.getAttribute("title") || el.textContent || "").trim();
-  }
-
-  function targetBranch() {
-    // The "→ main" span sits next to the source branch button.
-    const spans = document.querySelectorAll('span[class*="branch-name"][title]');
-    for (const s of spans) {
-      const t = (s.getAttribute("title") || s.textContent || "").trim();
-      if (t) return t;
-    }
-    return "";
   }
 
   function prNumber() {
@@ -93,13 +90,7 @@
     const name = document.createElement("span");
     name.className = "ghpr-sbb-name";
 
-    const arrow = document.createElement("span");
-    arrow.className = "ghpr-sbb-arrow";
-
-    const target = document.createElement("span");
-    target.className = "ghpr-sbb-target";
-
-    left.append(num, icon, name, arrow, target);
+    left.append(num, icon, name);
     left.addEventListener("click", scrollToTop);
 
     const copy = document.createElement("button");
@@ -128,16 +119,18 @@
   }
 
   function ensureBar() {
-    if (bar && bar.isConnected) return bar;
+    // Reuse our bar only if it's still attached and has the expected structure.
+    if (bar && bar.isConnected && bar.querySelector(".ghpr-sbb-name")) return bar;
+    // Drop any stale or duplicate bars left by a previous version/context so we
+    // never operate on an element built by older, mismatched code.
+    document.querySelectorAll("#" + BAR_ID).forEach((e) => e.remove());
     bar = buildBar();
     return bar;
   }
 
   function removeBar() {
-    if (bar) {
-      bar.remove();
-      bar = null;
-    }
+    bar = null;
+    document.querySelectorAll("#" + BAR_ID).forEach((e) => e.remove());
   }
 
   // ---- Update loop ---------------------------------------------------------
@@ -159,13 +152,12 @@
     }
 
     const b = ensureBar();
-    b.querySelector(".ghpr-sbb-name").textContent = name;
-    b.querySelector(".ghpr-sbb-name").title = name;
-    b.querySelector(".ghpr-sbb-num").textContent = prNumber();
-
-    const tgt = targetBranch();
-    b.querySelector(".ghpr-sbb-arrow").textContent = tgt ? "→" : "";
-    b.querySelector(".ghpr-sbb-target").textContent = tgt;
+    const nameEl = b.querySelector(".ghpr-sbb-name");
+    if (!nameEl) return; // bar structure unexpected; ensureBar rebuilds next tick
+    nameEl.textContent = name;
+    nameEl.title = name;
+    const numEl = b.querySelector(".ghpr-sbb-num");
+    if (numEl) numEl.textContent = prNumber();
 
     // Show only once the real branch label has scrolled above the viewport.
     const rect = el.getBoundingClientRect();

@@ -82,24 +82,6 @@
   color: #f1f3f4;
 }
 
-#ghpr-sticky-branch-bar .ghpr-sbb-arrow {
-  flex: none;
-  color: #9aa0a6;
-}
-#ghpr-sticky-branch-bar .ghpr-sbb-arrow:empty {
-  display: none;
-}
-
-#ghpr-sticky-branch-bar .ghpr-sbb-target {
-  flex: none;
-  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
-  font-size: 12.5px;
-  color: #bdc1c6;
-}
-#ghpr-sticky-branch-bar .ghpr-sbb-target:empty {
-  display: none;
-}
-
 #ghpr-sticky-branch-bar .ghpr-sbb-copy {
   flex: none;
   padding: 3px 10px;
