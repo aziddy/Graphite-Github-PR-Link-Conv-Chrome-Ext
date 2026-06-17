@@ -8,6 +8,7 @@ const COMMANDS = [
 const select = document.getElementById("openBehavior");
 const saved = document.getElementById("saved");
 const stickyBar = document.getElementById("stickyBranchBar");
+const autoScrollActivity = document.getElementById("autoScrollActivity");
 const savedSticky = document.getElementById("savedSticky");
 const changeBtn = document.getElementById("changeShortcut");
 const revertBtn = document.getElementById("revertShortcut");
@@ -64,14 +65,26 @@ select.addEventListener("change", async () => {
   setTimeout(() => saved.classList.remove("visible"), 1000);
 });
 
-chrome.storage.sync.get("stickyBranchBar").then(({ stickyBranchBar = true }) => {
-  stickyBar.checked = stickyBranchBar;
-});
+function flashStickySaved() {
+  savedSticky.classList.add("visible");
+  setTimeout(() => savedSticky.classList.remove("visible"), 1000);
+}
+
+chrome.storage.sync
+  .get(["stickyBranchBar", "autoScrollActivity"])
+  .then(({ stickyBranchBar = true, autoScrollActivity: autoScroll = true }) => {
+    stickyBar.checked = stickyBranchBar;
+    autoScrollActivity.checked = autoScroll;
+  });
 
 stickyBar.addEventListener("change", async () => {
   await chrome.storage.sync.set({ stickyBranchBar: stickyBar.checked });
-  savedSticky.classList.add("visible");
-  setTimeout(() => savedSticky.classList.remove("visible"), 1000);
+  flashStickySaved();
+});
+
+autoScrollActivity.addEventListener("change", async () => {
+  await chrome.storage.sync.set({ autoScrollActivity: autoScrollActivity.checked });
+  flashStickySaved();
 });
 
 changeBtn.addEventListener("click", () => {

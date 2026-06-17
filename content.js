@@ -15,11 +15,17 @@
   const PR_RE = /^https?:\/\/app\.graphite\.com\/github\/pr\/[^/]+\/[^/]+\/\d+/;
   const BAR_ID = "ghpr-sticky-branch-bar";
   const SETTING_KEY = "stickyBranchBar";
+  const ACTIVITY_KEY = "autoScrollActivity";
 
-  let enabled = true; // default on; overwritten by stored setting below
+  let enabled = true; // sticky bar; default on, overwritten by stored setting
   let bar = null;
   let branchEl = null; // element holding the source branch name
   let scheduled = false;
+
+  let activityEnabled = true; // auto-scroll Activity pane; default on
+  let activityWasOpen = false; // tracks open/close transitions of the pane
+  let autoScrollRaf = null; // active scroll animation frame, if any
+  let autoScrollCleanup = null; // tears down the animation's abort listeners
 
   // ---- DOM helpers ---------------------------------------------------------
 
@@ -173,6 +179,130 @@
     requestAnimationFrame(update);
   }
 
+  // ---- Activity pane auto-scroll ------------------------------------------
+
+  // The Activity side panel (opened by pressing `3`) is a fixed-position
+  // SidePanel whose header reads "Activity". It's removed from the DOM when
+  // closed, so its mere presence means "open".
+  function getActivityPane() {
+    for (const p of document.querySelectorAll('[class*="SidePanel_sidePanel"]')) {
+      const r = p.getBoundingClientRect();
+      if (r.width < 10 || r.height < 10) continue;
+      const heads = p.querySelectorAll('[class*="font__h3"], h1, h2, h3');
+      for (const h of heads) {
+        if (h.textContent.trim() === "Activity") return p;
+      }
+    }
+    return null;
+  }
+
+  // The inner scroll container that holds the chronological activity list.
+  function findActivityScroller(pane) {
+    let best = null;
+    for (const el of pane.querySelectorAll('[class*="Scrollable_scrollable"]')) {
+      if (
+        el.scrollHeight > el.clientHeight + 20 &&
+        (!best || el.scrollHeight > best.scrollHeight)
+      ) {
+        best = el;
+      }
+    }
+    if (!best) {
+      for (const el of pane.querySelectorAll("*")) {
+        const s = getComputedStyle(el);
+        if (
+          (s.overflowY === "auto" || s.overflowY === "scroll") &&
+          el.scrollHeight > el.clientHeight + 20 &&
+          (!best || el.scrollHeight > best.scrollHeight)
+        ) {
+          best = el;
+        }
+      }
+    }
+    return best;
+  }
+
+  function stopActivityAutoScroll() {
+    if (autoScrollRaf !== null) {
+      cancelAnimationFrame(autoScrollRaf);
+      autoScrollRaf = null;
+    }
+    if (autoScrollCleanup) {
+      autoScrollCleanup();
+      autoScrollCleanup = null;
+    }
+  }
+
+  // Smoothly animates the pane to the bottom over ~1s when it opens, so the
+  // latest commit/comment is in view. The target is re-evaluated each frame so
+  // it still lands at the bottom if activity is streaming in. Aborts the moment
+  // the user scrolls or interacts, so we never fight a manual scroll.
+  function startActivityAutoScroll() {
+    stopActivityAutoScroll();
+    const pane = getActivityPane();
+    const sc = pane && findActivityScroller(pane);
+    if (!sc) return;
+
+    const DURATION = 1000;
+    const startTop = sc.scrollTop;
+    let startTime = null;
+    let lastSet = startTop;
+
+    // easeInOutCubic — gentle acceleration and deceleration.
+    const ease = (t) =>
+      t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+
+    const SCROLL_KEYS = new Set([
+      "ArrowUp", "ArrowDown", "PageUp", "PageDown", "Home", "End", " ",
+    ]);
+    const abort = () => stopActivityAutoScroll();
+    const onKey = (e) => {
+      if (SCROLL_KEYS.has(e.key)) stopActivityAutoScroll();
+    };
+    const opts = { passive: true };
+    sc.addEventListener("wheel", abort, opts);
+    sc.addEventListener("touchstart", abort, opts);
+    sc.addEventListener("mousedown", abort, opts); // scrollbar drag
+    window.addEventListener("keydown", onKey, opts);
+    autoScrollCleanup = () => {
+      sc.removeEventListener("wheel", abort, opts);
+      sc.removeEventListener("touchstart", abort, opts);
+      sc.removeEventListener("mousedown", abort, opts);
+      window.removeEventListener("keydown", onKey, opts);
+    };
+
+    const frame = (now) => {
+      if (startTime === null) startTime = now;
+      // If scrollTop drifted from what we set, the user scrolled -> stop.
+      if (Math.abs(sc.scrollTop - lastSet) > 2) {
+        stopActivityAutoScroll();
+        return;
+      }
+      const target = sc.scrollHeight - sc.clientHeight; // bottom may grow
+      const t = Math.min(1, (now - startTime) / DURATION);
+      sc.scrollTop = startTop + (target - startTop) * ease(t);
+      lastSet = sc.scrollTop;
+      if (t < 1) {
+        autoScrollRaf = requestAnimationFrame(frame);
+      } else {
+        sc.scrollTop = sc.scrollHeight - sc.clientHeight; // snap to final bottom
+        stopActivityAutoScroll();
+      }
+    };
+    autoScrollRaf = requestAnimationFrame(frame);
+  }
+
+  // Detect open/close transitions of the Activity pane.
+  function checkActivity() {
+    const open = !!getActivityPane();
+    if (activityEnabled && open && !activityWasOpen) {
+      startActivityAutoScroll();
+    } else if (!open && autoScrollRaf !== null) {
+      stopActivityAutoScroll();
+    }
+    activityWasOpen = open;
+  }
+
   // ---- Wiring --------------------------------------------------------------
 
   function start() {
@@ -182,17 +312,26 @@
     // Catches SPA navigation and late-rendered content.
     setInterval(scheduleUpdate, 750);
     scheduleUpdate();
+
+    // Watches for the Activity pane opening so we can jump it to the latest.
+    setInterval(checkActivity, 350);
   }
 
-  chrome.storage.sync.get(SETTING_KEY).then((res) => {
+  chrome.storage.sync.get([SETTING_KEY, ACTIVITY_KEY]).then((res) => {
     enabled = res[SETTING_KEY] !== false; // default on
+    activityEnabled = res[ACTIVITY_KEY] !== false; // default on
     start();
   });
 
   chrome.storage.onChanged.addListener((changes, area) => {
-    if (area === "sync" && SETTING_KEY in changes) {
+    if (area !== "sync") return;
+    if (SETTING_KEY in changes) {
       enabled = changes[SETTING_KEY].newValue !== false;
       scheduleUpdate();
+    }
+    if (ACTIVITY_KEY in changes) {
+      activityEnabled = changes[ACTIVITY_KEY].newValue !== false;
+      if (!activityEnabled) stopActivityAutoScroll();
     }
   });
 })();
